@@ -81,9 +81,8 @@ output "secrets_manager_secret_name" {
 }
 
 output "connection_string" {
-  description = "PostgreSQL connection string (sensitive)"
-  value       = "postgresql://${aws_db_instance.postgresql.username}:${var.master_password != null ? var.master_password : try(random_password.master_password[0].result, "PASSWORD_NOT_SET")}@${aws_db_instance.postgresql.address}:${aws_db_instance.postgresql.port}/${aws_db_instance.postgresql.db_name}"
-  sensitive   = true
+  description = "PostgreSQL connection string template (without password)"
+  value       = "postgresql://${aws_db_instance.postgresql.username}:PASSWORD@${aws_db_instance.postgresql.address}:${aws_db_instance.postgresql.port}/${aws_db_instance.postgresql.db_name}"
 }
 
 output "monitoring_role_arn" {
