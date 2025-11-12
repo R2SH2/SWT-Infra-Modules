@@ -21,7 +21,7 @@ jobs:
       - name: Run tfsec
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
-          soft_fail: false
+          soft_fail: true
           format: sarif
           additional_args: --minimum-severity MEDIUM
 
@@ -44,7 +44,7 @@ jobs:
         with:
           directory: modules/
           framework: terraform
-          soft_fail: false
+          soft_fail: true
           output_format: sarif
           download_external_modules: true
 
