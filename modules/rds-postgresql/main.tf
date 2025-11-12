@@ -1,3 +1,10 @@
+# Local variables
+locals {
+  # Handle password logic: use provided password or generate a random one
+  # This prevents "value is marked" errors during validation
+  db_password = var.master_password != null ? var.master_password : try(random_password.master_password[0].result, "")
+}
+
 # DB Subnet Group
 resource "aws_db_subnet_group" "rds" {
   name       = "${var.name_prefix}-db-subnet-group"
@@ -87,7 +94,7 @@ resource "aws_secretsmanager_secret_version" "db_password" {
   secret_id = aws_secretsmanager_secret.db_password[0].id
   secret_string = jsonencode({
     username = var.master_username
-    password = var.master_password != null ? var.master_password : random_password.master_password[0].result
+    password = local.db_password
     engine   = "postgres"
     host     = aws_db_instance.postgresql.address
     port     = aws_db_instance.postgresql.port
@@ -151,7 +158,7 @@ resource "aws_db_instance" "postgresql" {
   # Database
   db_name  = var.database_name
   username = var.master_username
-  password = var.master_password != null ? var.master_password : random_password.master_password[0].result
+  password = local.db_password
   port     = var.database_port
 
   # Network & Security
