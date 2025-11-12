@@ -34,10 +34,9 @@ output "db_instance_username" {
   sensitive   = true
 }
 
-output "db_instance_password" {
-  description = "The master password"
-  value       = var.master_password != null ? var.master_password : try(random_password.master_password[0].result, null)
-  sensitive   = true
+output "db_instance_password_note" {
+  description = "Note: Retrieve password from Secrets Manager or use the provided master_password variable"
+  value       = "Password is stored in Secrets Manager. Use the secrets_manager_secret_arn output to retrieve it."
 }
 
 output "db_subnet_group_id" {
