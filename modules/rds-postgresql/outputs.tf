@@ -36,7 +36,7 @@ output "db_instance_username" {
 
 output "db_instance_password" {
   description = "The master password"
-  value       = var.master_password != null ? var.master_password : random_password.master_password[0].result
+  value       = var.master_password != null ? var.master_password : try(random_password.master_password[0].result, null)
   sensitive   = true
 }
 
@@ -82,11 +82,11 @@ output "secrets_manager_secret_name" {
 
 output "connection_string" {
   description = "PostgreSQL connection string (sensitive)"
-  value       = "postgresql://${aws_db_instance.postgresql.username}:${var.master_password != null ? var.master_password : random_password.master_password[0].result}@${aws_db_instance.postgresql.address}:${aws_db_instance.postgresql.port}/${aws_db_instance.postgresql.db_name}"
+  value       = "postgresql://${aws_db_instance.postgresql.username}:${var.master_password != null ? var.master_password : try(random_password.master_password[0].result, "PASSWORD_NOT_SET")}@${aws_db_instance.postgresql.address}:${aws_db_instance.postgresql.port}/${aws_db_instance.postgresql.db_name}"
   sensitive   = true
 }
 
 output "monitoring_role_arn" {
   description = "ARN of the IAM role for enhanced monitoring"
-  value       = var.monitoring_interval > 0 && var.monitoring_role_arn == null ? aws_iam_role.rds_monitoring[0].arn : var.monitoring_role_arn
+  value       = var.monitoring_interval > 0 && var.monitoring_role_arn == null ? try(aws_iam_role.rds_monitoring[0].arn, null) : var.monitoring_role_arn
 }
