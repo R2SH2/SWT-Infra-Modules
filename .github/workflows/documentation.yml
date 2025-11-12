@@ -1,0 +1,94 @@
+name: Documentation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'modules/**/*.tf'
+      - 'modules/**/README.md'
+  workflow_dispatch:
+
+jobs:
+  terraform-docs:
+    name: Generate Terraform Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Render terraform docs for VPC module
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          working-dir: modules/vpc-networking
+          output-file: README.md
+          output-method: inject
+          git-push: "false"
+
+      - name: Render terraform docs for S3 CloudFront module
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          working-dir: modules/s3-cloudfront
+          output-file: README.md
+          output-method: inject
+          git-push: "false"
+
+      - name: Render terraform docs for EC2 module
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          working-dir: modules/ec2-backend
+          output-file: README.md
+          output-method: inject
+          git-push: "false"
+
+      - name: Render terraform docs for RDS module
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          working-dir: modules/rds-postgresql
+          output-file: README.md
+          output-method: inject
+          git-push: "false"
+
+      - name: Check for documentation changes
+        id: verify_diff
+        run: |
+          git diff --quiet modules/ || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit documentation changes
+        if: steps.verify_diff.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add modules/
+          git commit -m "docs: update module documentation [skip ci]"
+
+      - name: Push changes
+        if: steps.verify_diff.outputs.changed == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.event.pull_request.head.ref }}
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changed = '${{ steps.verify_diff.outputs.changed }}';
+            let message = '## 📚 Documentation Check\n\n';
+
+            if (changed === 'true') {
+              message += '✅ Documentation has been automatically updated and committed to this PR.';
+            } else {
+              message += '✅ Documentation is up to date!';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            })

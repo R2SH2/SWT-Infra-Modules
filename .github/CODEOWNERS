@@ -1,0 +1,48 @@
+# CODEOWNERS file for SWT Terraform Modules
+#
+# This file defines who is responsible for code in this repository.
+# Pull requests will automatically request reviews from these owners.
+#
+# Learn more: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners - will be requested for review on all PRs
+* @swt-platform-team
+
+# Root level configuration
+/.github/ @swt-platform-team @swt-devops-lead
+/.gitignore @swt-platform-team
+/README.md @swt-platform-team @swt-tech-writers
+/CHANGELOG.md @swt-platform-team
+/CONTRIBUTING.md @swt-platform-team @swt-tech-writers
+
+# Module owners - specific teams responsible for each module
+
+# VPC Networking Module
+/modules/vpc-networking/ @swt-platform-team @swt-network-team
+
+# S3 CloudFront Module
+/modules/s3-cloudfront/ @swt-platform-team @swt-frontend-team
+
+# EC2 Backend Module
+/modules/ec2-backend/ @swt-platform-team @swt-backend-team
+
+# RDS PostgreSQL Module
+/modules/rds-postgresql/ @swt-platform-team @swt-database-team
+
+# Examples require review from module owners
+/modules/vpc-networking/examples/ @swt-platform-team @swt-network-team
+/modules/s3-cloudfront/examples/ @swt-platform-team @swt-frontend-team
+/modules/ec2-backend/examples/ @swt-platform-team @swt-backend-team
+/modules/rds-postgresql/examples/ @swt-platform-team @swt-database-team
+
+# Security-related files require security team review
+**/*security* @swt-platform-team @swt-security-team
+**/*secret* @swt-platform-team @swt-security-team
+**/*kms* @swt-platform-team @swt-security-team
+
+# CI/CD workflows require DevOps approval
+/.github/workflows/ @swt-platform-team @swt-devops-lead
+
+# Cost-related changes require finance approval
+**/*cost* @swt-platform-team @swt-finops-team
+**/*billing* @swt-platform-team @swt-finops-team

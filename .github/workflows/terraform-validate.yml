@@ -1,0 +1,67 @@
+name: Terraform Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  terraform-validate:
+    name: Validate Terraform Modules
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
+
+      - name: Terraform Format Check
+        run: |
+          echo "Checking Terraform formatting..."
+          terraform fmt -check -recursive
+        continue-on-error: false
+
+      - name: Validate VPC Module
+        working-directory: ./modules/vpc-networking
+        run: |
+          echo "Validating VPC networking module..."
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate S3 CloudFront Module
+        working-directory: ./modules/s3-cloudfront
+        run: |
+          echo "Validating S3 CloudFront module..."
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate EC2 Backend Module
+        working-directory: ./modules/ec2-backend
+        run: |
+          echo "Validating EC2 backend module..."
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate RDS PostgreSQL Module
+        working-directory: ./modules/rds-postgresql
+        run: |
+          echo "Validating RDS PostgreSQL module..."
+          terraform init -backend=false
+          terraform validate
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ All Terraform modules validated successfully!'
+            })
