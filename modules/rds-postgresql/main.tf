@@ -145,15 +145,15 @@ resource "aws_db_instance" "postgresql" {
   identifier = "${var.name_prefix}-db"
 
   # Engine
-  engine               = "postgres"
-  engine_version       = var.engine_version
-  instance_class       = var.instance_class
-  allocated_storage    = var.allocated_storage
-  storage_type         = var.storage_type
-  storage_encrypted    = var.storage_encrypted
-  kms_key_id           = var.kms_key_id
-  iops                 = var.iops
-  storage_throughput   = var.storage_throughput
+  engine             = "postgres"
+  engine_version     = var.engine_version
+  instance_class     = var.instance_class
+  allocated_storage  = var.allocated_storage
+  storage_type       = var.storage_type
+  storage_encrypted  = var.storage_encrypted
+  kms_key_id         = var.kms_key_id
+  iops               = var.iops
+  storage_throughput = var.storage_throughput
 
   # Database
   db_name  = var.database_name
@@ -178,18 +178,18 @@ resource "aws_db_instance" "postgresql" {
   final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.name_prefix}-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}"
 
   # Maintenance
-  maintenance_window              = var.maintenance_window
-  auto_minor_version_upgrade      = var.auto_minor_version_upgrade
-  allow_major_version_upgrade     = var.allow_major_version_upgrade
-  apply_immediately               = var.apply_immediately
-  deletion_protection             = var.deletion_protection
-  delete_automated_backups        = var.delete_automated_backups
+  maintenance_window          = var.maintenance_window
+  auto_minor_version_upgrade  = var.auto_minor_version_upgrade
+  allow_major_version_upgrade = var.allow_major_version_upgrade
+  apply_immediately           = var.apply_immediately
+  deletion_protection         = var.deletion_protection
+  delete_automated_backups    = var.delete_automated_backups
 
   # Monitoring
-  enabled_cloudwatch_logs_exports = var.enabled_cloudwatch_logs_exports
-  monitoring_interval             = var.monitoring_interval
-  monitoring_role_arn             = var.monitoring_interval > 0 ? var.monitoring_role_arn != null ? var.monitoring_role_arn : aws_iam_role.rds_monitoring[0].arn : null
-  performance_insights_enabled    = var.performance_insights_enabled
+  enabled_cloudwatch_logs_exports       = var.enabled_cloudwatch_logs_exports
+  monitoring_interval                   = var.monitoring_interval
+  monitoring_role_arn                   = var.monitoring_interval > 0 ? var.monitoring_role_arn != null ? var.monitoring_role_arn : aws_iam_role.rds_monitoring[0].arn : null
+  performance_insights_enabled          = var.performance_insights_enabled
   performance_insights_retention_period = var.performance_insights_enabled ? var.performance_insights_retention_period : null
 
   # Multi-AZ
@@ -264,7 +264,7 @@ resource "aws_cloudwatch_metric_alarm" "storage" {
   namespace           = "AWS/RDS"
   period              = "300"
   statistic           = "Average"
-  threshold           = var.storage_alarm_threshold * 1024 * 1024 * 1024  # Convert GB to bytes
+  threshold           = var.storage_alarm_threshold * 1024 * 1024 * 1024 # Convert GB to bytes
   alarm_description   = "This metric monitors RDS free storage space"
   alarm_actions       = var.alarm_actions
 
