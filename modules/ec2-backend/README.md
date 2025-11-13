@@ -12,6 +12,7 @@ This module creates an EC2 instance with security groups, IAM roles, and optiona
 - CloudWatch alarms for monitoring
 - IMDSv2 enforcement for enhanced security
 - Encrypted root volume
+- Automatically selects the latest Canonical Ubuntu 22.04 LTS AMI (with override option)
 
 ## Usage
 
@@ -25,7 +26,7 @@ module "backend" {
   vpc_id      = module.vpc.vpc_id
   subnet_id   = module.vpc.public_subnet_ids[0]
 
-  ami_id        = "ami-0c55b159cbfafe1f0"  # Amazon Linux 2023
+  # Canonical Ubuntu 22.04 LTS AMI is selected automatically (override with ami_id if needed)
   instance_type = "t3.micro"
 
   # Security
@@ -52,7 +53,6 @@ module "backend" {
   vpc_id      = module.vpc.vpc_id
   subnet_id   = module.vpc.public_subnet_ids[0]
 
-  ami_id        = "ami-0c55b159cbfafe1f0"
   instance_type = "t3.micro"
 
   # Open custom port for your application (e.g., Node.js on 3000)
@@ -78,30 +78,27 @@ module "backend" {
   vpc_id      = module.vpc.vpc_id
   subnet_id   = module.vpc.public_subnet_ids[0]
 
-  ami_id        = "ami-0c55b159cbfafe1f0"
   instance_type = "t3.micro"
 
   user_data = <<-EOF
     #!/bin/bash
-    # Update system
-    yum update -y
+    # Update system packages
+    apt-get update -y
 
-    # Install Docker
-    yum install -y docker
+    # Install Docker engine
+    apt-get install -y docker.io
     systemctl start docker
     systemctl enable docker
 
-    # Install Redis
+    # Install Redis via Docker
     docker run -d \
       --name redis \
       --restart unless-stopped \
       -p 6379:6379 \
       redis:alpine
 
-    # Install Docker Compose
-    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
-      -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
+    # Install Docker Compose plugin
+    apt-get install -y docker-compose-plugin
   EOF
 
   tags = {
@@ -120,7 +117,6 @@ module "backend" {
   vpc_id      = module.vpc.vpc_id
   subnet_id   = module.vpc.public_subnet_ids[0]
 
-  ami_id        = "ami-0c55b159cbfafe1f0"
   instance_type = "t3.micro"
 
   # Elastic IP for static IP
@@ -148,7 +144,6 @@ module "backend" {
   vpc_id      = module.vpc.vpc_id
   subnet_id   = module.vpc.public_subnet_ids[0]
 
-  ami_id        = "ami-0c55b159cbfafe1f0"
   instance_type = "t3.micro"
 
   # Use existing key pair
@@ -170,7 +165,6 @@ module "backend" {
   vpc_id      = module.vpc.vpc_id
   subnet_id   = module.vpc.public_subnet_ids[0]
 
-  ami_id        = "ami-0c55b159cbfafe1f0"
   instance_type = "t3.micro"
 
   custom_iam_policy = jsonencode({
@@ -193,28 +187,28 @@ module "backend" {
 }
 ```
 
-## Finding the Right AMI
+## Finding the Right AMI (Optional Override)
 
-Use AWS CLI to find the latest Amazon Linux 2023 AMI:
+The module automatically discovers the latest Canonical Ubuntu 22.04 LTS (Jammy) AMI (owner `099720109477`). If you want to pin a specific build, discover it with the AWS CLI:
 
 ```bash
 aws ec2 describe-images \
-  --owners amazon \
-  --filters "Name=name,Values=al2023-ami-*-x86_64" \
+  --owners 099720109477 \
+  --filters "Name=name,Values=ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*" \
   --query "sort_by(Images, &CreationDate)[-1].[ImageId,Name]" \
   --output text
 ```
 
-Or use Terraform data source:
+Or use a Terraform data source:
 
 ```hcl
-data "aws_ami" "amazon_linux_2023" {
+data "aws_ami" "ubuntu_2204" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"] # Canonical
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
 
   filter {
@@ -226,7 +220,7 @@ data "aws_ami" "amazon_linux_2023" {
 module "backend" {
   source = "./modules/ec2-backend"
 
-  ami_id = data.aws_ami.amazon_linux_2023.id
+  ami_id = data.aws_ami.ubuntu_2204.id
   # ... other variables
 }
 ```
@@ -238,7 +232,7 @@ module "backend" {
 | name_prefix | Prefix for resource names | string | - | yes |
 | vpc_id | VPC ID where EC2 instance will be created | string | - | yes |
 | subnet_id | Subnet ID where EC2 instance will be launched | string | - | yes |
-| ami_id | AMI ID for the EC2 instance | string | - | yes |
+| ami_id | Override for the EC2 AMI (defaults to latest Ubuntu 22.04 LTS) | string | null | no |
 | instance_type | EC2 instance type | string | "t3.micro" | no |
 | associate_public_ip | Associate a public IP address | bool | true | no |
 | user_data | User data script for initialization | string | null | no |
@@ -296,7 +290,7 @@ module "backend" {
 
 ### Via SSH (if key pair configured):
 ```bash
-ssh -i ~/.ssh/your-key.pem ec2-user@<public-ip>
+ssh -i ~/.ssh/your-key.pem ubuntu@<public-ip>
 ```
 
 ### Via AWS Systems Manager (recommended):
@@ -309,4 +303,4 @@ aws ssm start-session --target <instance-id>
 - t3.micro provides 2 vCPU and 1 GB RAM (suitable for small backends)
 - Included in AWS Free Tier (750 hours/month for 12 months)
 - For Redis, running it in a Docker container on the same instance saves RDS costs
-- Consider using Amazon Linux 2023 for latest features and long-term support
+- Canonical Ubuntu 22.04 LTS offers five years of security updates and is selected automatically

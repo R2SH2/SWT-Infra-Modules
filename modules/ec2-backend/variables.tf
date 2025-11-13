@@ -14,8 +14,9 @@ variable "subnet_id" {
 }
 
 variable "ami_id" {
-  description = "AMI ID for the EC2 instance"
+  description = "Optional override for the EC2 AMI (defaults to latest Canonical Ubuntu 22.04 LTS image)"
   type        = string
+  default     = null
 }
 
 variable "instance_type" {

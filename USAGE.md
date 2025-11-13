@@ -190,14 +190,19 @@ module "frontend" {
   tags = var.tags
 }
 
-# Backend
-data "aws_ami" "amazon_linux_2023" {
+// Optional: pin to a specific Ubuntu 22.04 LTS AMI if you do not want the module's auto-discovery
+data "aws_ami" "ubuntu_2204" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"]
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
 }
 
@@ -207,7 +212,7 @@ module "backend" {
   name_prefix = "${var.project_name}-dev"
   vpc_id      = module.vpc.vpc_id
   subnet_id   = module.vpc.public_subnet_ids[0]
-  ami_id      = data.aws_ami.amazon_linux_2023.id
+  # ami_id    = data.aws_ami.ubuntu_2204.id  # Optional override if you enabled the data source above
 
   instance_type   = "t3.micro"
   custom_app_port = 3000
